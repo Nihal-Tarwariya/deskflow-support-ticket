@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: deskflow-backend
+    env: node
+    region: singapore
+    plan: free
+    rootDir: deskflow-backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
