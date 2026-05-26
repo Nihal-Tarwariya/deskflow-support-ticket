@@ -6,7 +6,6 @@ const cors = require('cors');
 const ticketRoutes = require('./src/routes/tickets');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({
@@ -36,23 +35,33 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// ─── Database connection + server start ───────────────────────────────────────
-const MONGO_URI = process.env.MONGO_URI;
+// ─── MongoDB connection (cached for serverless) ───────────────────────────────
+let isConnected = false;
 
-if (!MONGO_URI) {
-  console.error('ERROR: MONGO_URI environment variable is not set.');
-  process.exit(1);
+async function connectDB() {
+  if (isConnected) return;
+  const MONGO_URI = process.env.MONGO_URI;
+  if (!MONGO_URI) throw new Error('MONGO_URI environment variable is not set.');
+  await mongoose.connect(MONGO_URI);
+  isConnected = true;
+  console.log('Connected to MongoDB');
 }
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`DeskFlow API running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
+// ─── Local server start (non-serverless) ─────────────────────────────────────
+if (process.env.NODE_ENV !== 'production' || process.env.LOCAL_DEV === 'true') {
+  const PORT = process.env.PORT || 5000;
+  connectDB().then(() => {
+    app.listen(PORT, () => console.log(`DeskFlow API running on port ${PORT}`));
+  }).catch((err) => {
     console.error('MongoDB connection failed:', err.message);
     process.exit(1);
   });
+}
+
+// ─── Serverless handler export ────────────────────────────────────────────────
+module.exports = async (req, res) => {
+  await connectDB();
+  return app(req, res);
+};
+
+module.exports.app = app;
