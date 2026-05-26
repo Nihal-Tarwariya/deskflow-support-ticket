@@ -1,6 +1,13 @@
 import React from 'react';
 
-export default function Sidebar() {
+const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { id: 'board', label: 'Triage Board', icon: 'view_kanban' },
+  { id: 'analytics', label: 'Analytics', icon: 'analytics' },
+  { id: 'settings', label: 'Settings', icon: 'settings' },
+];
+
+export default function Sidebar({ currentView, setCurrentView }) {
   return (
     <aside className="bg-[#121214] border-r border-[#1f1f23] w-[260px] h-screen fixed left-0 top-0 z-50 flex flex-col p-5 select-none shrink-0">
       {/* Header / Brand */}
@@ -12,33 +19,36 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation Links */}
       <nav className="flex-1 space-y-1">
-        <button className="w-full flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg font-medium text-sm transition-all duration-200">
-          <span className="material-symbols-outlined text-[20px]">dashboard</span>
-          <span>Dashboard</span>
-        </button>
-        <button className="w-full flex items-center gap-3 px-3 py-2 text-white bg-zinc-800/80 border border-zinc-700/30 rounded-lg font-medium text-sm transition-all duration-200">
-          <span className="material-symbols-outlined text-[20px] text-blue-500">view_kanban</span>
-          <span>Triage Board</span>
-        </button>
-        <button className="w-full flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg font-medium text-sm transition-all duration-200">
-          <span className="material-symbols-outlined text-[20px]">analytics</span>
-          <span>Analytics</span>
-        </button>
-        <button className="w-full flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg font-medium text-sm transition-all duration-200">
-          <span className="material-symbols-outlined text-[20px]">settings</span>
-          <span>Settings</span>
-        </button>
+        {NAV_ITEMS.map((item) => {
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setCurrentView(item.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 outline-none active:scale-[0.98] ${
+                isActive
+                  ? 'text-white bg-zinc-850 border border-zinc-700/30 shadow-sm ring-1 ring-blue-500/10'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/40'
+              }`}
+            >
+              <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-blue-500 font-bold' : ''}`}>
+                {item.icon}
+              </span>
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
       </nav>
 
-      {/* User profile */}
+      {/* User Profile */}
       <div className="border-t border-zinc-800/60 pt-4 mt-auto">
         <div className="flex items-center gap-3 px-2">
           <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center font-bold text-xs text-blue-500">NT</div>
           <div className="overflow-hidden">
             <div className="font-semibold text-sm leading-none text-zinc-200 truncate">Nihal Tarwariya</div>
-            <div className="text-[11px] text-zinc-500 mt-1 font-medium truncate">Triage Lead</div>
+            <div className="text-[11px] text-zinc-500 mt-1 font-medium truncate font-mono">21BCE10243</div>
           </div>
         </div>
       </div>
