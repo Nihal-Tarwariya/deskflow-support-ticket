@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const ticketRoutes = require('./src/routes/tickets');
+const bfhlRoutes = require('./src/routes/bfhl');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.get('/health', (req, res) => {
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/tickets', ticketRoutes);
+app.use('/bfhl', bfhlRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
