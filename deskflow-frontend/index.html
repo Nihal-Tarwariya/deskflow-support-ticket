@@ -1,15 +1,87 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DeskFlow — Support Ticket Triage Board</title>
     <meta name="description" content="DeskFlow is a support ticket triage board with SLA tracking, priority management, and real-time status updates." />
-    <meta name="theme-color" content="#0d0f1a" />
+    <meta name="theme-color" content="#09090b" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎫</text></svg>" />
+    
+    <!-- Tailwind CSS CDN and plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    
+    <!-- Custom Tailwind Configuration to match Stitch Design System -->
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              display: ["Outfit", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            keyframes: {
+              slideUpFade: {
+                '0%': { opacity: '0', transform: 'translateY(12px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              pulseSubtle: {
+                '0%, 100%': { opacity: '1' },
+                '50%': { opacity: '0.85' },
+              }
+            },
+            animation: {
+              'slide-up-fade': 'slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'pulse-subtle': 'pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            colors: {
+              background: '#09090b',
+              surface: '#121214',
+              'surface-card': '#18181b',
+              'surface-modal': '#27272a',
+              outline: '#27272a',
+              'outline-bright': '#3f3f46',
+              
+              // Custom priorities from Stitch Theme
+              'priority-low': '#a1a1aa',
+              'priority-medium': '#3b82f6',
+              'priority-high': '#f97316',
+              'priority-urgent': '#ef4444',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #09090b;
+        color: #f4f4f5;
+      }
+      /* Custom Scrollbar for Kanban Columns */
+      .kanban-scroll::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+      }
+      .kanban-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .kanban-scroll::-webkit-scrollbar-thumb {
+        background: #27272a;
+        border-radius: 4px;
+      }
+      .kanban-scroll::-webkit-scrollbar-thumb:hover {
+        background: #3f3f46;
+      }
+    </style>
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="font-sans antialiased overflow-hidden h-screen bg-[#09090b] text-[#f4f4f5]">
+    <div id="root" class="h-full"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

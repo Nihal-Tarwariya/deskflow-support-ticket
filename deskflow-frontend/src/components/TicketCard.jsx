@@ -9,16 +9,29 @@ const STATUS_LABELS = {
   closed: 'Closed',
 };
 
-const PRIORITY_LABELS = {
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  urgent: 'Urgent',
+const PRIORITY_THEMES = {
+  low: {
+    label: 'Low',
+    badgeClass: 'bg-zinc-800 text-zinc-400 border-zinc-700/40',
+    borderClass: 'border-zinc-800 hover:border-zinc-700',
+  },
+  medium: {
+    label: 'Medium',
+    badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    borderClass: 'border-zinc-800 hover:border-blue-500/30',
+  },
+  high: {
+    label: 'High',
+    badgeClass: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+    borderClass: 'border-zinc-800 hover:border-orange-500/30',
+  },
+  urgent: {
+    label: 'Urgent',
+    badgeClass: 'bg-red-500/10 text-red-400 border-red-500/20',
+    borderClass: 'border-zinc-800 hover:border-red-500/40',
+  },
 };
 
-/**
- * Format minutes into a human-readable age string (e.g. "3h 12m", "2d 5h").
- */
 function formatAge(minutes) {
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
@@ -29,10 +42,6 @@ function formatAge(minutes) {
   return `${days}d${hrs > 0 ? ` ${hrs}h` : ''}`;
 }
 
-/**
- * Returns which status buttons to show for a given current status.
- * Rules: one step forward, one step back.
- */
 function getValidMoves(currentStatus) {
   const idx = STATUS_ORDER.indexOf(currentStatus);
   const moves = [];
@@ -42,26 +51,25 @@ function getValidMoves(currentStatus) {
 }
 
 export default function TicketCard({ ticket, onMove, onDelete, isDragging }) {
-  const [moving, setMoving] = useState(null); // status being moved to
-  const [moveError, setMoveError] = useState(null);
+  const [moving, setMoving] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
   const validMoves = getValidMoves(ticket.status);
+  const theme = PRIORITY_THEMES[ticket.priority] || PRIORITY_THEMES.low;
 
   async function handleMove(newStatus) {
     setMoving(newStatus);
-    setMoveError(null);
     try {
       await onMove(ticket._id, newStatus);
     } catch (err) {
-      setMoveError(err.message);
-      setTimeout(() => setMoveError(null), 3000);
+      alert(`Failed to move ticket: ${err.message}`);
     } finally {
       setMoving(null);
     }
   }
 
-  async function handleDelete() {
+  async function handleDelete(e) {
+    e.stopPropagation();
     if (!confirm(`Delete ticket "${ticket.subject}"?`)) return;
     setDeleting(true);
     try {
@@ -73,7 +81,11 @@ export default function TicketCard({ ticket, onMove, onDelete, isDragging }) {
 
   return (
     <div
-      className={`ticket-card priority--${ticket.priority}${ticket.slaBreached ? ' ticket-card--breached' : ''}${isDragging ? ' ticket-card--dragging' : ''}`}
+      className={`ticket-card motion-safe:opacity-0 motion-safe:animate-slide-up-fade bg-[#121214] border ${
+        theme.borderClass
+      } ${ticket.slaBreached ? 'pt-7 border-red-500/20' : ''} ${
+        isDragging ? 'opacity-40 scale-95' : 'hover:scale-[1.01] hover:shadow-lg'
+      } rounded-lg p-4 cursor-pointer group transition-all duration-300 relative flex flex-col`}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData('ticketId', ticket._id);
@@ -82,77 +94,72 @@ export default function TicketCard({ ticket, onMove, onDelete, isDragging }) {
       }}
       id={`ticket-${ticket._id}`}
     >
-      {/* Header row */}
-      <div className="ticket-card__header">
-        <span className={`priority-badge priority-badge--${ticket.priority}`}>
-          {PRIORITY_LABELS[ticket.priority]}
+      {/* SLA Banner */}
+      {ticket.slaBreached && (
+        <div className="animate-pulse-subtle absolute top-0 left-0 w-full bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-t-lg border-b border-red-500/20 flex items-center gap-1.5 select-none">
+          <span className="material-symbols-outlined text-[12px] font-bold">warning</span>
+          SLA Breached
+        </div>
+      )}
+
+      {/* Header Info */}
+      <div className="flex justify-between items-center mb-2.5">
+        <span className={`border text-[9px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider ${theme.badgeClass}`}>
+          {theme.label}
         </span>
-        {ticket.slaBreached && (
-          <span className="sla-badge" title="SLA Breached">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M6 1L11 10H1L6 1Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-              <path d="M6 5v2.5M6 9h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            SLA Breach
-          </span>
-        )}
+        <span className="text-zinc-500 text-xs font-medium flex items-center gap-1">
+          <span className="material-symbols-outlined text-[13px] text-zinc-600">schedule</span>
+          {formatAge(ticket.ageMinutes)}
+        </span>
       </div>
 
       {/* Subject */}
-      <h3 className="ticket-card__subject">{ticket.subject}</h3>
+      <h4 className={`text-sm font-semibold leading-snug mb-3 flex-1 transition-colors ${
+        ticket.status === 'resolved' || ticket.status === 'closed'
+          ? 'text-zinc-500 line-through decoration-zinc-700/80 font-normal'
+          : 'text-zinc-200'
+      }`}>
+        {ticket.subject}
+      </h4>
 
-      {/* Meta */}
-      <div className="ticket-card__meta">
-        <span className="ticket-card__age" title="Time since creation">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
-            <path d="M6 3v3l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-          </svg>
-          {formatAge(ticket.ageMinutes)}
-        </span>
-        {(ticket.status === 'resolved' || ticket.status === 'closed') && (
-          <span className="ticket-card__resolved-tag">Frozen</span>
-        )}
-      </div>
+      {/* Customer Email & Quick Actions */}
+      <div className="flex items-center justify-between mt-auto pt-3 border-t border-zinc-800/40">
+        <div className="text-[10px] text-zinc-500 truncate max-w-[150px] font-medium" title={ticket.customerEmail}>
+          {ticket.customerEmail}
+        </div>
 
-      {/* Move error */}
-      {moveError && (
-        <div className="ticket-card__error" role="alert">{moveError}</div>
-      )}
+        {/* Action Controls */}
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 text-zinc-500">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="p-1 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors duration-150 active:scale-90 outline-none"
+            title="Delete ticket"
+            id={`delete-${ticket._id}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {deleting ? 'more_horiz' : 'delete'}
+            </span>
+          </button>
 
-      {/* Actions */}
-      <div className="ticket-card__actions">
-        <div className="ticket-card__move-btns">
           {validMoves.map(({ status, direction }) => (
             <button
               key={status}
-              className={`btn btn--move btn--move-${direction}`}
-              onClick={() => handleMove(status)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMove(status);
+              }}
               disabled={!!moving || deleting}
+              className="p-1 hover:text-blue-400 hover:bg-blue-500/10 rounded transition-colors duration-150 active:scale-90 outline-none"
               title={`Move to ${STATUS_LABELS[status]}`}
               id={`move-${ticket._id}-${status.replace('_', '-')}`}
             >
-              {direction === 'back' ? '← ' : ''}
-              {STATUS_LABELS[status]}
-              {direction === 'forward' ? ' →' : ''}
-              {moving === status && '…'}
+              <span className="material-symbols-outlined text-[16px] font-bold">
+                {moving === status ? 'more_horiz' : (direction === 'back' ? 'arrow_back' : 'arrow_forward')}
+              </span>
             </button>
           ))}
         </div>
-        <button
-          className="btn btn--delete"
-          onClick={handleDelete}
-          disabled={deleting}
-          title="Delete ticket"
-          id={`delete-${ticket._id}`}
-          aria-label="Delete ticket"
-        >
-          {deleting ? '…' : (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 3.5h10M5.5 3.5V2.5h3V3.5M4 3.5l.5 8h5l.5-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          )}
-        </button>
       </div>
     </div>
   );

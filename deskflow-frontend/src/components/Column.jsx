@@ -1,43 +1,38 @@
 import React, { useState } from 'react';
 import TicketCard from './TicketCard';
 
-const STATUS_LABELS = {
-  open: 'Open',
-  in_progress: 'In Progress',
-  resolved: 'Resolved',
-  closed: 'Closed',
-};
-
-const STATUS_ICONS = {
-  open: (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M5 8h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  in_progress: (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M8 4.5v4l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  resolved: (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  closed: (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
+const STATUS_CONFIGS = {
+  open: {
+    label: 'Open',
+    icon: 'radio_button_unchecked',
+    iconColorClass: 'text-blue-400',
+    headerClass: 'border-b-2 border-blue-500/20',
+  },
+  in_progress: {
+    label: 'In Progress',
+    icon: 'data_usage',
+    iconColorClass: 'text-amber-500 animate-[spin_3s_linear_infinite]',
+    headerClass: 'border-b-2 border-amber-500/20',
+  },
+  resolved: {
+    label: 'Resolved',
+    icon: 'check_circle',
+    iconColorClass: 'text-emerald-500',
+    headerClass: 'border-b-2 border-emerald-500/20',
+  },
+  closed: {
+    label: 'Closed',
+    icon: 'inventory_2',
+    iconColorClass: 'text-zinc-500',
+    headerClass: 'border-b-2 border-zinc-700/20',
+  },
 };
 
 export default function Column({ status, tickets, onMove, onDelete, onDrop }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [snapBack, setSnapBack] = useState(false);
+
+  const config = STATUS_CONFIGS[status] || STATUS_CONFIGS.open;
 
   function handleDragOver(e) {
     e.preventDefault();
@@ -60,37 +55,52 @@ export default function Column({ status, tickets, onMove, onDelete, onDrop }) {
     try {
       await onDrop(ticketId, status);
     } catch (err) {
-      // Snap-back animation for invalid drops
       setSnapBack(true);
-      setTimeout(() => setSnapBack(false), 600);
+      setTimeout(() => setSnapBack(false), 500);
     }
   }
 
   return (
     <div
-      className={`column${isDragOver ? ' column--drag-over' : ''}${snapBack ? ' column--snap-back' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      className={`w-[300px] flex flex-col h-full shrink-0 select-none transition-all duration-300 rounded-xl bg-[#0e0e11] border border-[#1f1f23]/60 p-4 ${
+        isDragOver ? 'bg-zinc-800/10 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.05)]' : ''
+      } ${snapBack ? 'animate-bounce' : ''}`}
       id={`column-${status.replace('_', '-')}`}
     >
-      <div className="column__header">
-        <div className="column__title">
-          <span className={`column__icon column__icon--${status.replace('_', '-')}`}>
-            {STATUS_ICONS[status]}
+      {/* Column Header */}
+      <div className={`flex items-center justify-between pb-3.5 mb-4 ${config.headerClass}`}>
+        <div className="flex items-center gap-2">
+          <span className={`material-symbols-outlined text-[18px] font-bold ${config.iconColorClass}`}>
+            {config.icon}
           </span>
-          <h2 className="column__name">{STATUS_LABELS[status]}</h2>
+          <h3 className="font-display font-bold text-sm tracking-tight text-zinc-100">
+            {config.label}
+          </h3>
         </div>
-        <span className="column__count">{tickets.length}</span>
+        <span className="bg-[#121214] border border-[#1f1f23] text-zinc-400 text-xs font-semibold px-2 py-0.5 rounded-md min-w-[20px] text-center font-mono">
+          {tickets.length}
+        </span>
       </div>
 
-      <div className="column__cards">
+      {/* Cards Area */}
+      <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 kanban-scroll">
         {tickets.length === 0 ? (
-          <div className="column__empty">
-            <p>No tickets</p>
-          </div>
+          status === 'closed' ? (
+            <div className="border border-dashed border-[#1f1f23] rounded-lg bg-zinc-900/10 flex flex-col items-center justify-center p-6 text-center h-32 text-zinc-600 transition-colors hover:border-zinc-800">
+              <span className="material-symbols-outlined text-[28px] mb-1.5 text-zinc-600">archive</span>
+              <p className="text-[11px] font-medium tracking-wide">Archived tickets</p>
+            </div>
+          ) : (
+            <div className="border border-dashed border-[#1f1f23] rounded-lg bg-zinc-900/10 flex flex-col items-center justify-center p-6 text-center h-32 text-zinc-600 transition-colors hover:border-zinc-800">
+              <span className="material-symbols-outlined text-[28px] mb-1.5 text-zinc-700">inbox</span>
+              <p className="text-[11px] font-medium tracking-wide">No tickets in here</p>
+            </div>
+          )
         ) : (
-          tickets.map((ticket) => (
+          tickets.map((ticket, idx) => (
             <TicketCard
               key={ticket._id}
               ticket={ticket}
