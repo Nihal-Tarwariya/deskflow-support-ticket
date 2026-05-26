@@ -24,14 +24,27 @@ export default function App() {
     removeTicket,
   } = useTickets();
 
-  // Filter tickets by search query locally for instant responsiveness
+  // Filter tickets locally for instantaneous, lag-free UI updates
   const filteredTickets = tickets.filter((t) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      t.subject.toLowerCase().includes(q) ||
-      (t.description && t.description.toLowerCase().includes(q))
-    );
+    // 1. Live Text Search Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchSubject = t.subject && t.subject.toLowerCase().includes(q);
+      const matchDesc = t.description && t.description.toLowerCase().includes(q);
+      if (!matchSubject && !matchDesc) return false;
+    }
+
+    // 2. Priority Pill Badge Filter
+    if (filterPriority) {
+      if (t.priority !== filterPriority) return false;
+    }
+
+    // 3. SLA Breach Indicator Filter
+    if (filterBreached) {
+      if (!t.slaBreached) return false;
+    }
+
+    return true;
   });
 
   return (

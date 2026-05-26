@@ -13,22 +13,22 @@ const PRIORITY_THEMES = {
   low: {
     label: 'Low',
     badgeClass: 'bg-zinc-800 text-zinc-400 border-zinc-700/40',
-    borderClass: 'border-zinc-800 hover:border-zinc-700',
+    borderClass: 'border-zinc-850 hover:border-zinc-700',
   },
   medium: {
     label: 'Medium',
     badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    borderClass: 'border-zinc-800 hover:border-blue-500/30',
+    borderClass: 'border-zinc-850 hover:border-blue-500/30',
   },
   high: {
     label: 'High',
     badgeClass: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    borderClass: 'border-zinc-800 hover:border-orange-500/30',
+    borderClass: 'border-zinc-850 hover:border-orange-500/30',
   },
   urgent: {
     label: 'Urgent',
     badgeClass: 'bg-red-500/10 text-red-400 border-red-500/20',
-    borderClass: 'border-zinc-800 hover:border-red-500/40',
+    borderClass: 'border-zinc-850 hover:border-red-500/40',
   },
 };
 
@@ -81,10 +81,10 @@ export default function TicketCard({ ticket, onMove, onDelete, isDragging }) {
 
   return (
     <div
-      className={`ticket-card motion-safe:opacity-0 motion-safe:animate-slide-up-fade bg-[#121214] border ${
+      className={`ticket-card motion-safe:opacity-0 motion-safe:animate-slide-up-fade bg-[#161619] border ${
         theme.borderClass
       } ${ticket.slaBreached ? 'pt-7 border-red-500/20' : ''} ${
-        isDragging ? 'opacity-40 scale-95' : 'hover:scale-[1.01] hover:shadow-lg'
+        isDragging ? 'opacity-45 scale-95' : 'hover:scale-[1.01] hover:shadow-lg'
       } rounded-lg p-4 cursor-pointer group transition-all duration-300 relative flex flex-col`}
       draggable
       onDragStart={(e) => {
@@ -128,8 +128,8 @@ export default function TicketCard({ ticket, onMove, onDelete, isDragging }) {
           {ticket.customerEmail}
         </div>
 
-        {/* Action Controls */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 text-zinc-500">
+        {/* Action Controls (Always visible, but soft opacity so they are usable on touch screens) */}
+        <div className="opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 text-zinc-500">
           <button
             onClick={handleDelete}
             disabled={deleting}
